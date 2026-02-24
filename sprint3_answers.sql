@@ -46,47 +46,77 @@ left join coupons c on o.coupon_code=c.coupon_code;
 -- Q9: List all coupons and show how many times each was used.
 -- Include coupons that were never used (should show 0).
 -- Display coupon_code, is_active, times_used.
-select c.coupon_code,c.is_active,count (o.coupon_code) as times_used
+select c.coupon_code,c.is_active,count(o.coupon_code) as times_used
 from coupons c
 left join orders o on o.coupon_code = c.coupon_code
 group by c.coupon_code, c.is_active
 order by times_used;
 -- Q10: For each region, calculate the total revenue and number of orders.
 -- Display region, total_revenue, order_count. Order by revenue descending.
-
-
+select c.region,sum(o.order_amount) as total_revenue,count(o.order_id) as order_count
+from orders o 
+inner join countries c on o.country_code=c.country_code
+group by c.region
+order by total_revenue DESC;
 -- Q11: For each customer tier, calculate the average order amount and total number of orders.
--- Display tier, avg_order_amount (rounded to 2 decimals), order_count.
-
+-- Display tier, order_count.
+select c.tier,round(avg(o.order_amount),2) as order_count
+from orders o
+inner join customers c on c.customer_id=o.customer_id
+group by c.tier;
 
 -- Q12: Find the top 5 customers by total spending.
 -- Show customer_id, tier, home_country (as full country name), total_spent.
 -- Order by total descending.
-
-
+select o.customer_id,c.tier,coun.country_name,sum(o.order_amount) as total_spending
+from customers c 
+inner join countries coun on coun.country_code=c.home_country
+inner join orders o on o.customer_id=c.customer_id
+group by o.customer_id,c.tier,coun.country_name
+order by total_spending desc
+limit 5;
 -- Q13: For each coupon, calculate the total discount amount given away (order_amount × discount_percent / 100).
 -- Show coupon_code, times_used, total_discount_given.
-
-
+select c.coupon_code, count(o.coupon_code) as times_used, round(sum(o.order_amount * c.discount_percent/100),2) as total_discount_given
+from coupons c
+inner join orders o on o.coupon_code=c.coupon_code
+group by c.coupon_code;
 -- Q14: Show the number of orders per channel per region.
 -- Display region, channel, order_count. Only include channels that aren't NULL.
-
-
+select o.channel,c.region,count(o.order_id) as order_count 
+from countries c 
+inner join orders o on o.country_code=c.country_code
+where o.channel is not null
+group by o.channel,c.region;
 -- Q15: Find all orders where the customer is ordering from a different country than their home_country.
 -- Show order_id, customer_id, home_country, order_country, order_amount.
-
+select o.order_id,o.customer_id,c.home_country,o.country_code as order_country,o.order_amount
+from orders o 
+inner join customers c on c.customer_id=o.customer_id
+where o.country_code != c.home_country;
 
 -- Q16: Find customers whose average order amount is higher than the overall average.
 -- Show customer_id, tier, avg_amount, overall_avg.
-
+select c.customer_id,c.tier,round(avg(o.order_amount),2) as avg_amount
+from customers c 
+inner join orders o on o.customer_id=c.customer_id
+group by c.customer_id,c.tier
+having avg(o.order_amount) > (select round(avg(order_amount),2) from orders);
 
 -- Q17: For each order, find how many status changes it went through.
 -- Show order_id, order_amount, num_status_changes. Order by changes descending.
-
+select o1.order_id,o1.order_amount, count(o2.changed_at) as num_status_changes
+from orders o1 
+inner join order_status_history o2 on o2.order_id=o1.order_id
+group by o1.order_id,o1.order_amount
+order by num_status_changes desc;
 
 -- Q18: Find all orders that used a coupon that was expired at the time of the order (order_date > valid_until).
 -- Show order_id, order_date, coupon_code, valid_until.
-
+select o.order_id,o.order_date,c.coupon_code,c.valid_until
+from orders o 
+inner join coupons c on c.coupon_code=o.coupon_code
+where o.order_date > c.valid_until;
 
 -- Q19: Find the most popular channel in each region.
 -- Show region, channel, order_count.
