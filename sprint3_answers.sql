@@ -125,11 +125,27 @@ where o.order_date > c.valid_until;
 -- Q20: Using a CTE, calculate each customer's total spending, then classify them as
 -- 'high_value' (> 1000), 'medium_value' (500–1000), or 'low_value' (< 500).
 -- Show customer_id, tier, total_spent, value_class.
-
+with customer_spending as (
+select c.customer_id,c.tier,round(sum(o.order_amount),2) as total_spent,
+case 
+  when round(sum(o.order_amount),2)>1000 then 'high_value'
+  when round(sum(o.order_amount),2) between 500 and 1000 then 'medium_value'
+  else 'low_value' 
+end as value_class
+from customers c
+inner join orders o on o.customer_id=c.customer_id
+group by c.customer_id,c.tier
+)
+select * from customer_spending;
 
 -- Q21: For each order, show its rank within its country by order amount (highest first).
 -- Also show the country's total order count.
 -- Display order_id, country_name, order_amount, country_rank, country_total_orders.
+select o.order_id,c.country_name,o.order_amount,
+rank() over(partition by c.country_name order by o.order_amount desc) as country_rank,
+count(o.order_id) over(partition by c.country_name) as country_total_orders
+from orders o
+inner join countries c on o.country_code=c.country_code;
 
 
 -- Q22: Calculate the average time between status changes for each order (in hours).
