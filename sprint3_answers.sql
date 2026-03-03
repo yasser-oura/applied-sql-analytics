@@ -28,7 +28,7 @@ where order_id='ORD-1004'
 order by changed_at;
 -- Q6: List all countries with their total number of orders. Include countries with 0 orders.
 -- Display country_name, order_count.
-select c.country_name,o.order_amount 
+select c.country_name,count(o.order_id) as order_count 
 from countries c 
 left join orders o on o.country_code=c.country_code;
 -- Q7: Find all customers who have never placed an order.
@@ -60,7 +60,7 @@ group by c.region
 order by total_revenue DESC;
 -- Q11: For each customer tier, calculate the average order amount and total number of orders.
 -- Display tier, order_count.
-select c.tier,round(avg(o.order_amount),2) as order_count
+select c.tier,round(avg(o.order_amount),2) as avg_order_amount,count(o.order_id) as order_count
 from orders o
 inner join customers c on c.customer_id=o.customer_id
 group by c.tier;
@@ -97,7 +97,8 @@ where o.country_code != c.home_country;
 
 -- Q16: Find customers whose average order amount is higher than the overall average.
 -- Show customer_id, tier, avg_amount, overall_avg.
-select c.customer_id,c.tier,round(avg(o.order_amount),2) as avg_amount
+select c.customer_id,c.tier,round(avg(o.order_amount),2) as avg_amount,
+(select round(avg(order_amount),2) from orders) as overall_avg
 from customers c 
 inner join orders o on o.customer_id=c.customer_id
 group by c.customer_id,c.tier
@@ -120,6 +121,18 @@ where o.order_date > c.valid_until;
 
 -- Q19: Find the most popular channel in each region.
 -- Show region, channel, order_count.
+with channel_counts as (
+  select c.region,o.channel,count(o.order_id) as order_count,
+  rank() over(partition by c.region order by count(o.order_id) desc) as channel_rank
+  from orders o
+  inner join countries c on o.country_code=c.country_code
+  where o.channel is not null
+  group by c.region,o.channel
+)
+select region,channel,order_count
+from channel_counts
+where channel_rank=1
+order by region;
 
 
 -- Q20: Using a CTE, calculate each customer's total spending, then classify them as
