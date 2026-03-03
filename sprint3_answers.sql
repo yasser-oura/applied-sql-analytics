@@ -30,7 +30,8 @@ order by changed_at;
 -- Display country_name, order_count.
 select c.country_name,count(o.order_id) as order_count 
 from countries c 
-left join orders o on o.country_code=c.country_code;
+left join orders o on o.country_code=c.country_code
+group by c.country_name;
 -- Q7: Find all customers who have never placed an order.
 -- Show customer_id, home_country, tier, signup_date.
 select c.customer_id,c.home_country,c.tier,c.signup_date
@@ -40,7 +41,7 @@ where o.customer_id is null;
 -- Q8: Show all orders, and for those that used a coupon, show the discount details.
 -- Orders without a coupon should still appear with NULL discount info.
 -- Display order_id, order_amount, coupon_code, discount_percent.
-select o.order_id,o.order_amount,c.coupon_code,c.discount_percent
+select o.order_id,o.order_amount,o.coupon_code,c.discount_percent
 from orders o 
 left join coupons c on o.coupon_code=c.coupon_code;
 -- Q9: List all coupons and show how many times each was used.
