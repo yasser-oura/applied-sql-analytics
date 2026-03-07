@@ -3,8 +3,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
-from pathlib import Path
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+load_dotenv()
 print("HOST:", os.getenv("DB_HOST"))
 print("USER:", os.getenv("DB_USER"))
 print("PASS:", os.getenv("DB_PASSWORD"))
@@ -17,7 +16,7 @@ conn = psycopg2.connect(
 )
 def run_query(label, query):
     print(f"\n{'='*60}")
-    print(f"  {label}")
+    print(f" {label}")
     print('='*60)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(query)
