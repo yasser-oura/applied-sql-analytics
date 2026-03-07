@@ -134,8 +134,6 @@ select region,channel,order_count
 from channel_counts
 where channel_rank=1
 order by region;
-
-
 -- Q20: Using a CTE, calculate each customer's total spending, then classify them as
 -- 'high_value' (> 1000), 'medium_value' (500–1000), or 'low_value' (< 500).
 -- Show customer_id, tier, total_spent, value_class.
@@ -165,17 +163,71 @@ inner join countries c on o.country_code=c.country_code;
 -- Q22: Calculate the average time between status changes for each order (in hours).
 -- Show order_id, num_changes, avg_hours_between_changes.
 -- Only include orders with at least 2 status changes.
-
-
+with status_times as (
+select order_id, changed_at,
+lag(changed_at) over(partition by order_id order by changed_at) as prev_changed_at
+from order_status_history
+)
+select order_id, count(changed_at) as num_changes,
+round(avg(extract(epoch from (changed_at - prev_changed_at))/3600),2) as avg_hours_between_changes
+from status_times
+where prev_changed_at is not null
+group by order_id
+order by avg_hours_between_changes desc;
 -- Q23: Write a query that produces a monthly report showing:
 -- month, total_orders, total_revenue, unique_customers,
 -- coupon_based_orders, avg_order_amount, revenue from first-time vs returning customers.
-
+select 
+    to_char(o.order_date, 'yyyy-mm') as month,
+    count(*) as total_orders,
+    round(sum(o.order_amount), 2) as total_revenue,
+    count(distinct o.customer_id) as unique_customers,
+    count(o.coupon_code) as coupon_orders,
+    round(avg(o.order_amount), 2) as avg_order_amount,
+    round(sum(case when f.first_month = to_char(o.order_date, 'yyyy-mm') 
+              then o.order_amount else 0 end), 2) as new_customer_revenue,
+    round(sum(case when f.first_month != to_char(o.order_date, 'yyyy-mm') 
+              then o.order_amount else 0 end), 2) as returning_customer_revenue
+from orders o
+join (
+    select customer_id, to_char(min(order_date), 'yyyy-mm') as first_month
+    from orders group by customer_id
+) f on o.customer_id = f.customer_id
+group by to_char(o.order_date, 'yyyy-mm')
+order by month;
 
 -- Q24: Find customers who placed their first order within 30 days of signing up vs those who took longer.
 -- Show signup_speed ('fast' or 'slow'), customer_count, avg_order_amount.
-
-
+with first_orders as (
+    select customer_id, min(order_date) as first_order_date
+    from orders group by customer_id
+)
+select 
+    case when fo.first_order_date::date - cu.signup_date <= 30 
+         then 'fast' else 'slow' end as signup_speed,
+    count(distinct cu.customer_id) as customer_count,
+    round(avg(o.order_amount), 2) as avg_order_amount
+from customers cu
+join first_orders fo on cu.customer_id=fo.customer_id
+join orders o on cu.customer_id=o.customer_id
+group by case when fo.first_order_date::date - cu.signup_date <= 30 
+              then 'fast' else 'slow' end;
 -- Q25: Create a cohort analysis: group customers by signup month, then for each cohort
 -- show how many orders they placed in each subsequent month.
 -- Display signup_month, order_month, months_since_signup, order_count.
+select 
+    to_char(cu.signup_date, 'yyyy-mm') as signup_month,
+    to_char(o.order_date, 'yyyy-mm') as order_month,
+    ((extract(year from o.order_date) - extract(year from cu.signup_date)) * 12) + 
+    (extract(month from o.order_date) - extract(month from cu.signup_date)) as months_since_signup,
+    count(o.order_id) as order_count
+from customers cu
+join orders o on cu.customer_id=o.customer_id
+group by 
+    to_char(cu.signup_date, 'yyyy-mm'),
+    to_char(o.order_date, 'yyyy-mm'),
+    ((extract(year from o.order_date) - extract(year from cu.signup_date)) * 12) + 
+    (extract(month from o.order_date) - extract(month from cu.signup_date))
+order by 
+    signup_month, 
+    months_since_signup;
