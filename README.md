@@ -4,8 +4,8 @@ A collection of **25 SQL analytics queries** built on a mock e-commerce dataset,
 
 ## ER Schema
 
-![ER Schema]
-<img width="1003" height="692" alt="image" src="https://github.com/user-attachments/assets/d4cde37b-f596-47bc-b47a-b947e3548aec" />
+[ER Schema]
+<img width="700" height="692" alt="image" src="https://github.com/user-attachments/assets/d4cde37b-f596-47bc-b47a-b947e3548aec" />
 
 
 ### Tables
