@@ -15,10 +15,7 @@ conn = psycopg2.connect(
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASSWORD"),
 )
-
-
 def run_query(label, query):
-    """Run a SQL query and print results."""
     print(f"\n{'='*60}")
     print(f"  {label}")
     print('='*60)
@@ -31,7 +28,6 @@ def run_query(label, query):
         else:
             print("No results.")
 
-
 # ─── Queries ──────────────────────────────────────────────────────────────────
 
 Q1 = """
@@ -39,54 +35,46 @@ SELECT order_id, order_date, country_name, order_amount
 FROM orders o
 INNER JOIN countries c ON o.country_code = c.country_code;
 """
-
 Q2 = """
 SELECT o.order_id, o.customer_id, c.tier, o.order_amount
 FROM orders o
 INNER JOIN customers c ON o.customer_id = c.customer_id;
 """
-
 Q3 = """
 SELECT o.order_id, o.order_amount, o.coupon_code, c.discount_percent
 FROM orders o
 INNER JOIN coupons c ON o.coupon_code = c.coupon_code
 WHERE o.coupon_code IS NOT NULL;
 """
-
 Q4 = """
 SELECT o.order_id, coun.country_name, cu.tier, o.order_amount
 FROM orders o
 INNER JOIN countries coun ON o.country_code = coun.country_code
 INNER JOIN customers cu ON o.customer_id = cu.customer_id;
 """
-
 Q5 = """
 SELECT order_id, status, changed_at
 FROM order_status_history
 WHERE order_id = 'ORD-1004'
 ORDER BY changed_at;
 """
-
 Q6 = """
 SELECT c.country_name, COUNT(o.order_id) AS order_count
 FROM countries c
 LEFT JOIN orders o ON o.country_code = c.country_code
 GROUP BY c.country_name;
 """
-
 Q7 = """
 SELECT c.customer_id, c.home_country, c.tier, c.signup_date
 FROM customers c
 LEFT JOIN orders o ON c.customer_id = o.customer_id
 WHERE o.customer_id IS NULL;
 """
-
 Q8 = """
 SELECT o.order_id, o.order_amount, o.coupon_code, c.discount_percent
 FROM orders o
 LEFT JOIN coupons c ON o.coupon_code = c.coupon_code;
 """
-
 Q9 = """
 SELECT c.coupon_code, c.is_active, COUNT(o.coupon_code) AS times_used
 FROM coupons c
@@ -94,7 +82,6 @@ LEFT JOIN orders o ON o.coupon_code = c.coupon_code
 GROUP BY c.coupon_code, c.is_active
 ORDER BY times_used;
 """
-
 Q10 = """
 SELECT c.region, SUM(o.order_amount) AS total_revenue, COUNT(o.order_id) AS order_count
 FROM orders o
@@ -102,14 +89,12 @@ INNER JOIN countries c ON o.country_code = c.country_code
 GROUP BY c.region
 ORDER BY total_revenue DESC;
 """
-
 Q11 = """
 SELECT c.tier, ROUND(AVG(o.order_amount), 2) AS avg_order_amount, COUNT(o.order_id) AS order_count
 FROM orders o
 INNER JOIN customers c ON c.customer_id = o.customer_id
 GROUP BY c.tier;
 """
-
 Q12 = """
 SELECT o.customer_id, c.tier, coun.country_name, SUM(o.order_amount) AS total_spending
 FROM customers c
@@ -119,7 +104,6 @@ GROUP BY o.customer_id, c.tier, coun.country_name
 ORDER BY total_spending DESC
 LIMIT 5;
 """
-
 Q13 = """
 SELECT c.coupon_code, COUNT(o.coupon_code) AS times_used,
        ROUND(SUM(o.order_amount * c.discount_percent / 100), 2) AS total_discount_given
@@ -127,7 +111,6 @@ FROM coupons c
 INNER JOIN orders o ON o.coupon_code = c.coupon_code
 GROUP BY c.coupon_code;
 """
-
 Q14 = """
 SELECT o.channel, c.region, COUNT(o.order_id) AS order_count
 FROM countries c
@@ -135,14 +118,12 @@ INNER JOIN orders o ON o.country_code = c.country_code
 WHERE o.channel IS NOT NULL
 GROUP BY o.channel, c.region;
 """
-
 Q15 = """
 SELECT o.order_id, o.customer_id, c.home_country, o.country_code AS order_country, o.order_amount
 FROM orders o
 INNER JOIN customers c ON c.customer_id = o.customer_id
 WHERE o.country_code != c.home_country;
 """
-
 Q16 = """
 SELECT c.customer_id, c.tier, ROUND(AVG(o.order_amount), 2) AS avg_amount,
        (SELECT ROUND(AVG(order_amount), 2) FROM orders) AS overall_avg
@@ -151,7 +132,6 @@ INNER JOIN orders o ON o.customer_id = c.customer_id
 GROUP BY c.customer_id, c.tier
 HAVING AVG(o.order_amount) > (SELECT ROUND(AVG(order_amount), 2) FROM orders);
 """
-
 Q17 = """
 SELECT o1.order_id, o1.order_amount, COUNT(o2.changed_at) AS num_status_changes
 FROM orders o1
@@ -159,14 +139,12 @@ INNER JOIN order_status_history o2 ON o2.order_id = o1.order_id
 GROUP BY o1.order_id, o1.order_amount
 ORDER BY num_status_changes DESC;
 """
-
 Q18 = """
 SELECT o.order_id, o.order_date, c.coupon_code, c.valid_until
 FROM orders o
 INNER JOIN coupons c ON c.coupon_code = o.coupon_code
 WHERE o.order_date > c.valid_until;
 """
-
 Q19 = """
 WITH channel_counts AS (
   SELECT c.region, o.channel, COUNT(o.order_id) AS order_count,
@@ -181,7 +159,6 @@ FROM channel_counts
 WHERE channel_rank = 1
 ORDER BY region;
 """
-
 Q20 = """
 WITH customer_spending AS (
   SELECT c.customer_id, c.tier, ROUND(SUM(o.order_amount), 2) AS total_spent,
@@ -196,7 +173,6 @@ WITH customer_spending AS (
 )
 SELECT * FROM customer_spending;
 """
-
 Q21 = """
 SELECT o.order_id, c.country_name, o.order_amount,
        RANK() OVER (PARTITION BY c.country_name ORDER BY o.order_amount DESC) AS country_rank,
@@ -204,7 +180,6 @@ SELECT o.order_id, c.country_name, o.order_amount,
 FROM orders o
 INNER JOIN countries c ON o.country_code = c.country_code;
 """
-
 Q22 = """
 WITH status_times AS (
   SELECT order_id, changed_at,
@@ -218,7 +193,6 @@ WHERE prev_changed_at IS NOT NULL
 GROUP BY order_id
 ORDER BY avg_hours_between_changes DESC;
 """
-
 Q23 = """
 SELECT
     TO_CHAR(o.order_date, 'YYYY-MM') AS month,
@@ -239,7 +213,6 @@ JOIN (
 GROUP BY TO_CHAR(o.order_date, 'YYYY-MM')
 ORDER BY month;
 """
-
 Q24 = """
 WITH first_orders AS (
     SELECT customer_id, MIN(order_date) AS first_order_date
@@ -256,7 +229,6 @@ JOIN orders o ON cu.customer_id = o.customer_id
 GROUP BY CASE WHEN fo.first_order_date::date - cu.signup_date <= 30
               THEN 'fast' ELSE 'slow' END;
 """
-
 Q25 = """
 SELECT
     TO_CHAR(cu.signup_date, 'YYYY-MM') AS signup_month,
@@ -273,7 +245,6 @@ GROUP BY
     (EXTRACT(MONTH FROM o.order_date) - EXTRACT(MONTH FROM cu.signup_date))
 ORDER BY signup_month, months_since_signup;
 """
-
 
 # ─── Run all queries ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
