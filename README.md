@@ -4,8 +4,7 @@ A collection of **25 SQL analytics queries** built on a mock e-commerce dataset,
 
 ## ER Schema
 
-[ER Schema]
-<img width="700" height="692" alt="image" src="https://github.com/user-attachments/assets/d4cde37b-f596-47bc-b47a-b947e3548aec" />
+<img width="700" height="692" alt="ER Schema" src="https://github.com/user-attachments/assets/d4cde37b-f596-47bc-b47a-b947e3548aec" />
 
 
 ### Tables
@@ -45,7 +44,13 @@ pip install psycopg2-binary python-dotenv
 
 ### Configure environment
 
-Create a `.env` file in the project root:
+Copy the example environment file and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your actual database details:
 
 ```
 DB_HOST=your_host
@@ -69,3 +74,4 @@ This runs all 25 queries and prints the results to the console.
 |---|---|
 | `main.py` | Python script that connects to PostgreSQL and runs all queries |
 | `sprint3_answers.sql` | Standalone SQL file with all 25 queries and comments |
+| `.env.example` | Template for required environment variables |
